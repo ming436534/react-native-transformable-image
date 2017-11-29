@@ -22,6 +22,6 @@
     "prop-types": "*"
   },
   "dependencies": {
-    "react-native-view-transformer": "https://github.com/RealGeeks/react-native-view-transformer.git"
+    "react-native-view-transformer": "https://github.com/ming436534/react-native-view-transformer.git"
   }
 }

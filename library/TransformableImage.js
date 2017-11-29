@@ -48,21 +48,17 @@ export default class TransformableImage extends Component {
   }
 
   componentWillMount() {
-    if (!this.props.pixels) {
-      this.getImageSize(this.props.source);
-    }
   }
 
   componentWillReceiveProps(nextProps) {
     if (!sameSource(this.props.source, nextProps.source)) {
       //image source changed, clear last image's pixels info if any
       this.setState({pixels: undefined, keyAcumulator: this.state.keyAcumulator + 1})
-      this.getImageSize(nextProps.source);
     }
   }
 
   render() {
-    let maxScale = 1;
+    let maxScale = this.props.maxScale;
     let contentAspectRatio = undefined;
     let width, height; //pixels
 
@@ -97,72 +93,44 @@ export default class TransformableImage extends Component {
         onViewTransformed={this.props.onViewTransformed}
         onSingleTapConfirmed={this.props.onSingleTapConfirmed}
         maxScale={maxScale}
-        contentAspectRatio={contentAspectRatio}
-        onLayout={this.onLayout.bind(this)}
+        contentAspectRatio={null}
+        onLayout={this.onLayout}
+        onExceed={this.props.onExceed}
+        exceedThreshold={this.props.exceedThreshold}
         style={this.props.style}>
         <Image
           {...this.props}
           style={[this.props.style, {backgroundColor: 'transparent'}]}
           resizeMode={'contain'}
-          onLoadStart={this.onLoadStart.bind(this)}
-          onLoad={this.onLoad.bind(this)}
+          onLoadStart={this.onLoadStart}
+          onLoad={this.onLoad}
           capInsets={{left: 0.1, top: 0.1, right: 0.1, bottom: 0.1}} //on iOS, use capInsets to avoid image downsampling
         />
       </ViewTransformer>
     );
   }
 
-  onLoadStart(e) {
+  onLoadStart = (e) => {
     this.props.onLoadStart && this.props.onLoadStart(e);
     this.setState({
       imageLoaded: false
     });
   }
 
-  onLoad(e) {
+  onLoad = (e) => {
     this.props.onLoad && this.props.onLoad(e);
     this.setState({
       imageLoaded: true
     });
   }
 
-  onLayout(e) {
+  onLayout = (e) => {
     let {width, height} = e.nativeEvent.layout;
     if (this.state.width !== width || this.state.height !== height) {
       this.setState({
         width: width,
         height: height
       });
-    }
-  }
-
-  getImageSize(source) {
-    if(!source) return;
-
-    DEV && console.log('getImageSize...' + JSON.stringify(source));
-
-    if (typeof Image.getSize === 'function') {
-      if (source && source.uri) {
-        Image.getSize(
-          source.uri,
-          (width, height) => {
-            DEV && console.log('getImageSize...width=' + width + ', height=' + height);
-            if (width && height) {
-              if(this.state.pixels && this.state.pixels.width === width && this.state.pixels.height === height) {
-                //no need to update state
-              } else {
-                this.setState({pixels: {width, height}});
-              }
-            }
-          },
-          (error) => {
-            console.error('getImageSize...error=' + JSON.stringify(error) + ', source=' + JSON.stringify(source));
-          })
-      } else {
-        console.warn('getImageSize...please provide pixels prop for local images');
-      }
-    } else {
-      console.warn('getImageSize...Image.getSize function not available before react-native v0.28');
     }
   }
 
